@@ -1,0 +1,77 @@
+---
+title: "The final project - Animated changes of GDP PPP 1990-2018"
+author: "Bartosz Czernecki"
+date: "1/14/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Overall aim
+The animated charts are increasingly interested in many social media podcasts. 
+For example, the popularity among programming languages is shown in this link: <https://www.youtube.com/watch?v=Og847HVwRSI>
+
+In the final project we will try to create an animated chart that will show us changes of 
+Growth Domestic Product (GDP) standardized by Purchasing Power Paritity (PPP) in all countries that participate in our course. The values are given in USD.
+
+# Dataset
+
+The World Bank publishes GDP PPP reports on annual basis  
+(<https://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD>) for all countries around the world. This dataset has been pre-formated to the form readable in spreadsheet-like file.
+
+Please download the file from <http://iqdata.pl/dataprocessing/data/> and save it in a known location on your laptop. 
+
+## Reading dataset
+
+Set your working directory to the location of downloaded file. Please use from the upper
+menu `SESSION` then `SET WORKING DIRECTORY` and `CHOOSE DIRECTORY`.
+
+Activate library that allows reading "XLSX" format (e.g. `readxl`) and name the read data as `df` object. The structure of the created `df` object should be as shown below for the first 6 rows:
+```{r reading, echo=FALSE}
+library(readxl)
+df = read_excel("data/gdp_ppp.xlsx")
+head(df)
+```
+
+## Re-shaping data 
+
+In the final phase of the project we will use `ggplot2` package to create our charts. This
+package requires so called narrow format of the data frame. Therefore our data frame needs
+to be reshaped to the form where we will have 4-5 columns with: `country`, `code`, `year` and `gdp`.
+
+It can be done *manually* or with the use of a pivot-like functions. 
+One of my favourie is the `gather` function from the `tidyr` package, which probably will have to be installed on your laptop if not used before. 
+
+Activate the `tidyr` and `dplyr` (or `tidyverse`) libraries and launch the `?gather` command to familiarize yourself with the way it works. Try to reshape our `df` object to the following structure:
+
+
+```{r reshape, echo=FALSE}
+library(dplyr)
+library(tidyr)
+df2 = gather(df, key = year,  value = "gdp", 3:31)
+```
+
+```{r reshape2, echo=TRUE}
+head(df2)
+```
+
+Hints: Use the `year` column as the **key** argument, and `value = "gdp"`. Save the obtained results as `df2`.
+
+## Choosing countries
+
+Right now our data frame `df2` contains data for all countries. We'd like to limit our
+animation only to countries that participate in our class, i.e.: Czech Rep., Germany, Poland South Korea and Spain. Additionally, we'd like to add average for the entire world which is given as *WLD* in the column `code`.
+
+Find out codes for the chosen countries and use the `filter` command to clip the dataset for these 6 codes. Fill in the following command and save results as `gdp_tidy`
+
+```{r filter}
+# gdp_tidy = filter(df2, code %in% c("COUNTRY_1", "COUNTRY_2", ...) )
+```
+
+This is the first 10 rows of our `gdp_tidy` should return:
+```{r filter1, echo=FALSE}
+gdp_tidy = filter(df2, code %in% c("POL", "DEU", "CZE", "KOR", "ESP", "WLD"))
+head(gdp_tidy, 10)
+```
