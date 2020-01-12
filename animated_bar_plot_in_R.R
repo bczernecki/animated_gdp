@@ -3,9 +3,8 @@ library(gganimate)
 library(readxl)
 df = read_excel("data/gdp_ppp.xlsx")
 
-df = gather(df, key = year,  value = "gdp", 3:32)
-colnames(df) = c('country', 'code', 'year', 'gdp')
-gdp_tidy = filter(df, code %in% c("POL", "DEU", "CZE", "KOR", "ESP", "HUN","WLD"))
+df = gather(df, key = year,  value = "gdp", 3:31)
+gdp_tidy = filter(df, code %in% c("POL", "DEU", "CZE", "KOR", "ESP", "WLD"))
 
 #gdp_tidy <- read_csv("./data/gdp_tidy.csv")
 

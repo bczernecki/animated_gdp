@@ -6,7 +6,11 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
 ```
 
 # Overall aim
@@ -21,7 +25,7 @@ Growth Domestic Product (GDP) standardized by Purchasing Power Paritity (PPP) in
 The World Bank publishes GDP PPP reports on annual basis  
 (<https://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD>) for all countries around the world. This dataset has been pre-formated to the form readable in spreadsheet-like file.
 
-Please download the file from <http://iqdata.pl/dataprocessing/data/> and save it in a known location on your laptop. 
+Please download the file from <http://iqdata.pl/dataprocessing/data/gdp_ppp.xlsx> and save it in a known location on your laptop. 
 
 ## Reading dataset
 
@@ -66,8 +70,8 @@ animation only to countries that participate in our class, i.e.: Czech Rep., Ger
 
 Find out codes for the chosen countries and use the `filter` command to clip the dataset for these 6 codes. Fill in the following command and save results as `gdp_tidy`
 
-```{r filter}
-# gdp_tidy = filter(df2, code %in% c("COUNTRY_1", "COUNTRY_2", ...) )
+```{r filter, eval=F, include=T}
+gdp_tidy = filter(df2, code %in% c("COUNTRY_1", "COUNTRY_2", ...) )
 ```
 
 The first 10 rows of our `gdp_tidy` should return:
@@ -91,17 +95,18 @@ head(test)
 
 ## Intro
 Activate the `ggplot2` package and try to create a basic plot with any of the chosen geom_.
-The list of available geoms can be found in a cheat-sheet (https://rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf). Let's start with *geom_bar* as it is the most generic geom_ type for data structured as our `test` data frame.
+The list of available geoms can be found in the cheat-sheet (https://rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf). 
+Let's start with *geom_bar* as it is the most generic geom_ type for data structured as our `test` data frame.
 
 Fill in the following blank fields in a below attached pseudocode to create a chart that
 will be similar to our plot shown in a figure below:
 
-```{r gg_test0, eval=FALSE, include=TRUE}
+```{r gg_test0, eval=FALSE, include=TRUE, fig.height=3.5, fig.width=6}
 ggplot(test, aes(x = ________, y = ____ )) +
   geom_bar(stat = 'identity') 
 ```
 
-```{r gg_test1, echo=FALSE}
+```{r gg_test1, echo=FALSE, fig.height=3.5, fig.width=6}
 library(ggplot2)
 ggplot(test, aes(x = country, y = gdp)) + geom_bar(stat="identity")
 ```
@@ -112,17 +117,79 @@ We can change the default plotting options  by modyfying or adding extra argumen
 Try to add argument `fill = as.factor(country)` inside the `aes()` statement. 
 
 At the end of the created code add (i.e. with `+`) `coord_flip()` function which 
-rotates the chart by 90 degrees. The results should be similar to the below shown chart:
+rotates the chart by 90 degrees. The results should be similar to the below chart:
 
-```{r test2, echo=FALSE}
-ggplot(test, aes(x = country, y =gdp, fill =as.factor(country))) +
+```{r test2, echo=FALSE, fig.height=3.5, fig.width=6}
+ggplot(test, aes(x = country, y = gdp, fill = as.factor(country))) +
   geom_bar(stat = 'identity') +
   coord_flip()
 ```
 
-
-
-ggplot(test, aes(x = country, y =gdp, fill =as.factor(country))) +
+### Removing legend
+The default legend is redundant as we only show country names which are also labeled on the Y axis. 
+Legend as many other ggplot items are controlled by the `theme()` function. 
+In order to get rid off the legend please add to the plotting syntax: `theme(legend.position = "none")`
+ 
+```{r test3, echo=FALSE, fig.height=3.5, fig.width=6}
+ggplot(test, aes(x = country, y = gdp, fill = as.factor(country))) +
   geom_bar(stat = 'identity') +
-  coord_flip()
+  coord_flip() + 
+  theme(legend.position = 'none')
+```
 
+### Titles & Labels
+Our chart miss titles and labels. We can add them with `labs()` function at the end of `ggplot` syntax. For example:
+
+```{r test3-1, include=T, eval=F}
+labs(title = 'GDP PPP / capita',  
+       subtitle  =  "For selected countries",
+       caption  = "GDP PPP in USD/capita | Data Source: World Bank Data") 
+```
+
+```{r test4, echo=FALSE, fig.height=4, fig.width=6}
+ggplot(test, aes(x = country, y = gdp, fill = as.factor(country))) +
+  geom_bar(stat = 'identity') +
+  coord_flip() + 
+  theme(legend.position = 'none') +
+  labs(title = 'GDP PPP / capita',  
+       subtitle  =  "For selected countries",
+       caption  = "GDP PPP in USD/capita | Data Source: World Bank Data") 
+```
+
+### Adding text
+We can also add another `geom_` to plot to show as text/label the real (or rounded) value
+for GDP that will be visible on the height of each bar. Try to play a bit with the `geom_text()`
+template given below and modify it to get the exemplary result:
+
+```{r test4-1, include=T, eval=F}
+geom_text(aes(y = ____, label = _____), hjust = 2, size= 5, col = '______')+
+```
+
+```{r test4-2, echo=FALSE, fig.height=4, fig.width=6}
+ggplot(test, aes(x = country, y = gdp, fill = as.factor(country))) +
+  geom_bar(stat = 'identity') +
+  coord_flip() + 
+  theme(legend.position = 'none') +
+  labs(title = 'GDP PPP / capita',  
+       subtitle  =  "For selected countries",
+       caption  = "GDP PPP in USD/capita | Data Source: World Bank Data") +
+  geom_text(aes(y = gdp, label = round(gdp)), hjust = 2, size= 5, col = 'white')
+```
+
+
+## Plotting the full dataset
+
+So far we have worked on a clipped dataset for year 2018 only. We can look at the whole dataset in a similar way by creating a separate charts for each individual year. It can be very easily done with the `facet_grid()` or `facet_wrap()` functions that are added to the created grammar/template of our chart.
+As the argument for this command please use the column name that will be used for the division with tilde (~) as prefix. Do not forget to change the `test` data frame with the full dataset.
+
+```{r wrap, echo=FALSE, fig.height=9, fig.width=7}
+ggplot(gdp_tidy, aes(x = country, y = gdp, fill = as.factor(country))) +
+  geom_bar(stat = 'identity') +
+  coord_flip() + 
+  theme(legend.position = 'none') +
+  labs(title = 'GDP PPP / capita',  
+       subtitle  =  "For selected countries",
+       caption  = "GDP PPP in USD/capita | Data Source: World Bank Data") +
+  geom_text(aes(y = gdp, label = round(gdp)), hjust = 0.1, size= 2, col = 'black')+
+  facet_wrap(~year)
+```
