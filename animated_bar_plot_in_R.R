@@ -1,11 +1,11 @@
 library(tidyverse)
 library(gganimate)
 library(readxl)
-df = read_excel("~/Desktop/gdp_ppp.xlsx")
+df = read_excel("data/gdp_ppp.xlsx")
 
 df = gather(df, key = year,  value = "gdp", 3:32)
 colnames(df) = c('country', 'code', 'year', 'gdp')
-gdp_tidy = filter(df, code %in% c("POL", "DEU", "CZE", "KOR", "ESP", "WLD"))
+gdp_tidy = filter(df, code %in% c("POL", "DEU", "CZE", "KOR", "ESP", "HUN","WLD"))
 
 #gdp_tidy <- read_csv("./data/gdp_tidy.csv")
 
@@ -18,7 +18,7 @@ gdp_formatted <- gdp_tidy %>%
   group_by(country) %>% 
   ungroup()
 
-gdp_formatted$Value_lbl = gdp_formatted$gdp
+gdp_formatted$Value_lbl = round(gdp_formatted$gdp)
 gdp_formatted = gdp_formatted[gdp_formatted$year<2019,]
 # Animation
 

@@ -70,8 +70,59 @@ Find out codes for the chosen countries and use the `filter` command to clip the
 # gdp_tidy = filter(df2, code %in% c("COUNTRY_1", "COUNTRY_2", ...) )
 ```
 
-This is the first 10 rows of our `gdp_tidy` should return:
+The first 10 rows of our `gdp_tidy` should return:
 ```{r filter1, echo=FALSE}
 gdp_tidy = filter(df2, code %in% c("POL", "DEU", "CZE", "KOR", "ESP", "WLD"))
 head(gdp_tidy, 10)
 ```
+
+## Creating test data for a single year
+In the next steps we will be trying to create a bar chart showing differences in GDP PPP / capita. For testing purposes we can clip our dataset to the last year (2018) available in the
+`gdp_tidy` object. Use again the `filter` command for column `year` where it is equal to 2018. Save the results as `test`.
+
+```{r test1, echo=FALSE}
+test = filter(gdp_tidy, year == 2018)
+head(test)
+```
+
+
+
+# Plotting data with `ggplot2` library
+
+## Intro
+Activate the `ggplot2` package and try to create a basic plot with any of the chosen geom_.
+The list of available geoms can be found in a cheat-sheet (https://rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf). Let's start with *geom_bar* as it is the most generic geom_ type for data structured as our `test` data frame.
+
+Fill in the following blank fields in a below attached pseudocode to create a chart that
+will be similar to our plot shown in a figure below:
+
+```{r gg_test0, eval=FALSE, include=TRUE}
+ggplot(test, aes(x = ________, y = ____ )) +
+  geom_bar(stat = 'identity') 
+```
+
+```{r gg_test1, echo=FALSE}
+library(ggplot2)
+ggplot(test, aes(x = country, y = gdp)) + geom_bar(stat="identity")
+```
+
+## Plot customization
+
+We can change the default plotting options  by modyfying or adding extra arguments to the ggplot syntax. 
+Try to add argument `fill = as.factor(country)` inside the `aes()` statement. 
+
+At the end of the created code add (i.e. with `+`) `coord_flip()` function which 
+rotates the chart by 90 degrees. The results should be similar to the below shown chart:
+
+```{r test2, echo=FALSE}
+ggplot(test, aes(x = country, y =gdp, fill =as.factor(country))) +
+  geom_bar(stat = 'identity') +
+  coord_flip()
+```
+
+
+
+ggplot(test, aes(x = country, y =gdp, fill =as.factor(country))) +
+  geom_bar(stat = 'identity') +
+  coord_flip()
+
