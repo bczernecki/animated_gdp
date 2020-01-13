@@ -101,12 +101,12 @@ Let's start with *geom_bar* as it is the most generic geom_ type for data struct
 Fill in the following blank fields in a below attached pseudocode to create a chart that
 will be similar to our plot shown in a figure below:
 
-```{r gg_test0, eval=FALSE, include=TRUE, fig.height=3.5, fig.width=6}
+```{r gg_test0, eval=FALSE, include=TRUE, fig.height=3, fig.width=6}
 ggplot(test, aes(x = ________, y = ____ )) +
   geom_bar(stat = 'identity') 
 ```
 
-```{r gg_test1, echo=FALSE, fig.height=3.5, fig.width=6}
+```{r gg_test1, echo=FALSE, fig.height=3, fig.width=6}
 library(ggplot2)
 ggplot(test, aes(x = country, y = gdp)) + geom_bar(stat="identity")
 ```
@@ -119,7 +119,7 @@ Try to add argument `fill = as.factor(country)` inside the `aes()` statement.
 At the end of the created code add (i.e. with `+`) `coord_flip()` function which 
 rotates the chart by 90 degrees. The results should be similar to the below chart:
 
-```{r test2, echo=FALSE, fig.height=3.5, fig.width=6}
+```{r test2, echo=FALSE, fig.height=3, fig.width=6}
 ggplot(test, aes(x = country, y = gdp, fill = as.factor(country))) +
   geom_bar(stat = 'identity') +
   coord_flip()
@@ -193,3 +193,159 @@ ggplot(gdp_tidy, aes(x = country, y = gdp, fill = as.factor(country))) +
   geom_text(aes(y = gdp, label = round(gdp)), hjust = 0.1, size= 2, col = 'black')+
   facet_wrap(~year)
 ```
+
+# Making animation with `gganimate` package
+
+## Data Pre-processing
+
+Right now our geom_bar always displays the same order for all selected countries. 
+However, there are years when countries rank can change.
+Therefore we will have to extend our data frame by one more column describing current
+rank for our countries.
+
+There are plenty of possibilities that allow us to create rank column, but the quickest one might be coupled application of `group_by()` and `arrange()` functions. We can also add one more column that will be used for labeling that has country name and GDP glued together in one field.
+
+```{r dplyr1}
+library(dplyr)
+gdp_tidy2 = gdp_tidy %>% group_by(year) %>%   arrange(year, gdp)
+gdp_tidy2$rank = 6:1
+gdp_tidy2$label = paste(gdp_tidy2$country, round(gdp_tidy2$gdp))
+tail(gdp_tidy2)
+```
+
+## Creating animation
+
+### Required packages
+
+The same template as we used previously with `geom_bar()` can be applied for creating animation with `gganimate` package. This package is based on other packages, so please
+install the `png`, `gifski` and other required dependencies.
+
+### Plot template
+
+The previously created template can be now used with small modification, which will
+include the rank position. This might be dane by adding `as.factor(rank)` to the `aes()` introductory part of the code.
+
+In the `geom_text()` we can use our label column that will show country name and value of GDP.
+
+### Setting up for animiation
+
+One new thing that we will be added to the plotting code is the `transition_states()`, 
+that is responsible for creating multiples slides of animation. The first argument should be
+given as unquoted name of column that will be responsible for creating new state. There are 
+more parameters to be set. We will set arguments for: transition_states, transition_length and state length.
+
+We can also modify the `labs()` to show in the title a current year on animation.
+If we put name **closest_state** in the curly brackets it will be read as value set in the `transition_states` above (i.e. year in our case). When all is set we can save the syntax
+as new object (e.g. **anim**).
+
+This is how the code for animation setup might look like:
+
+```{r template anim, eval=F, include=T}
+library(gganimate)
+anim = ggplot(gdp_tidy2, aes(x = as.factor(rank), y = gdp, fill = as.factor(country))) + 
+  geom_bar(stat = 'identity') +
+  coord_flip() + 
+  geom_text(aes(y = gdp, label = label), hjust = 2, size= 5, col = 'white')+
+  theme(axis.text=element_text(size=14),
+        legend.position = "none") +
+    transition_states(states = year,
+    transition_length = 2,
+    state_length = 1) +
+  labs(title = 'GDP PPP per Year : {closest_state}',  
+       subtitle  =  "For selected 6 countries",
+       caption  = "GDP PPP in USD/capita | Data Source: World Bank Data")
+```
+
+## Rendering animation
+
+There are at least to way to generate our animation. The most popular are GIFs and MP4 files. Let's start with the first one.
+
+The created previously `anim` object can be used as first argument for `animate()` function
+that will require setting up a list of arguments such as: number of frames to be rendered,
+fps, duration, render engine, resolution, file name, etc.. We will focus only on the most elementary
+settings that can be used with gifski package.
+
+If your computer has ffmpeg codecs / drivers available (typically pre-installed on Linux and Mac computers) you may also try to create MP4 file:
+
+```{r gifski, eval=F}
+#install.packages("gifski")
+library(gifski)
+animate(anim, 100, fps = 10,  width = 1200, height = 1000, 
+        renderer = gifski_renderer("gganim.gif")) 
+
+# For MP4
+animate(anim, 200, fps = 10,  width = 900, height = 750, 
+        renderer = ffmpeg_renderer()) -> for_mp4
+
+anim_save("animation.mp4", animation = for_mp4 )
+```
+
+
+## Improving animation layout
+
+The `geom_bar()` was not created with an intention to be used for animated plots.
+We can replace `geom_bar` statement with `geom_tile()` that is more appropriate for 
+this kind of tasks.
+
+```{r geom_tile, eval=F}
+  geom_tile(aes(y = gdp/2, height = gdp, width = 0.9), alpha = 0.8, color = NA) 
+```
+
+We can also add labels for countries with `geom_text()` on the height of GDP = 0:
+
+```{r geom_tile2, eval=F}
+geom_text(aes(y = 0, label = country), vjust = 0.2, hjust = 1, size=3) 
+```
+
+The whole procedure for creating animation is exactly the same as done previously, i.e.
+creating `anim` object, rendering animation and saving as GIF/MP4 file. Try to run the
+modified code and play the created animation.
+
+
+# The final code:
+
+I have prepared some further modification to `theme()` function that modifies axis, 
+labels, fonts, etc... We haven't covered this settings during our intro to the `ggplot` package. However, you can try to get the same animation with the below attached code:
+
+```{r final, eval=F}
+anim = ggplot(gdp_tidy2, aes(rank, group = country, 
+               fill = as.factor(country), color = as.factor(country))) +
+  geom_tile(aes(y = gdp/2, height = gdp, width = 0.9), alpha = 0.8, color = NA) +
+  geom_text(aes(y = 0, label = country), vjust = 0.2, hjust = 1, size=5) +
+  geom_text(aes(y=gdp,label = round(gdp), hjust=0, size = 6)) +
+  coord_flip(clip = "off", expand = FALSE) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_reverse() +
+  guides(color = FALSE, fill = FALSE) +
+  theme(axis.line=element_blank(),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        legend.position="none",
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.grid.major.x = element_line( size=.1, color="grey" ),
+        panel.grid.minor.x = element_line( size=.1, color="grey" ),
+        plot.title=element_text(size=25, hjust=0.5, face="bold", colour="grey", vjust=-1),
+        plot.subtitle=element_text(size=18, hjust=0.5, face="italic", color="grey"),
+        plot.caption =element_text(size=12, hjust=0.5, face="italic", color="grey"),
+        plot.background=element_blank(),
+        plot.margin = margin(2,2, 2, 4, "cm")) +
+  transition_states(year, transition_length = 4, state_length = 1) +
+  view_follow(fixed_x = TRUE)  +
+  labs(title = 'GDP PPP per Year : {closest_state}',  
+       subtitle  =  "Chosen 5 countries on the background of world average",
+       caption  = "GDP PPP in USD/capita | Data Source: World Bank Data") 
+
+# alternatively use GIF animation if MP4 is not supported on your machine:
+for_mp4 = animate(anim, 200, fps = 10,  width = 900, height = 750, 
+        renderer = ffmpeg_renderer()) 
+anim_save("animation.mp4", animation = for_mp4 )
+```
+
+**Hint: ** - this code can be copy-paste from this link: 
+<http://iqdata.pl/dataprocessing/data/final.R>
