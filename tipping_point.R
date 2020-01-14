@@ -9,11 +9,6 @@ df$z = df$y
 
 
 
-for (i in 1:200){
-  if(i<150){
-    df$x1 = x(df$x[i], df$y[i]+0.02, col="red", pch=19)
-  }
-}
 
 
 df$x1 = df$x
@@ -21,8 +16,8 @@ df$y1 = df$x
 
 for (i in 1:200){
   #plot(df, type= 'l', xlab = '', ylab='')
-    if(i<82){
-      zakres = sample(50:82, size= 1)
+    if(i<88){
+      zakres = sample(50:88, size= 1)
       df$x1[i] = df$x[zakres]
       df$y1[i] = df$y[zakres]
     } else {
@@ -31,13 +26,36 @@ for (i in 1:200){
     }
 }
 
+for (i in 140:200){
+  #plot(df, type= 'l', xlab = '', ylab='')
+  
+    zakres = sample(130:182, size= 1)
+    df$x1[i] = df$x[zakres]
+    df$y1[i] = df$y[zakres]
+}
+
 plot(df$x, df$y, type = 'l')
 points(df$x1, df$y1)
 df
-df$z = NA
-df$z[20:30] = df$y[20:30]
-plot(df, type= 'l')
 
-library(ggplot2)
-ggplot(df, aes(x = x, y = y)) +geom_line()+
-  geom_point(aes(x = x, y = z))
+
+df$stat = 1:200
+# library(gganimate)
+# library(ggplot2)
+# anim = ggplot(df, aes(x = x, y = y)) +
+#   geom_line(aes(x = x, y = y))+
+#   geom_point(aes(x=x1,y = y1, group = stat))+
+#   transition_states(stat, transition_length = 4, state_length = 1)
+# 
+# for_mp4 = animate(anim, 200, fps = 10,  width = 900, height = 750, 
+#                   renderer = ffmpeg_renderer()) 
+# anim_save("animation.mp4", animation = for_mp4 )
+
+
+
+for (i in 1:200){
+  png(filename = paste0(sprintf(fmt = "%03d", i),".png"))
+  plot(x = df$x, y = df$y, type= 'l', xlab = '', ylab='')
+  points(df$x1[i], df$y1[i], col='red', pch=19, cex=2)
+  dev.off()
+}
